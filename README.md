@@ -1,4 +1,4 @@
 ## PSForever-Stats
 website for https://psforeverstats.com/
 
-Leaderboard and various stats for the emulator project https://www.psforever.net/
+Goal of the website is to track leaderboards and various stats for the planetside 1 emulator project https://www.psforever.net/

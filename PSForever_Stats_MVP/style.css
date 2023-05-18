@@ -1,0 +1,69 @@
+
+
+body{
+    background-color: #ececec;
+    
+    margin: 0; /*use this to have the full screen used without default borders*/
+}
+
+
+
+header{
+    background-color: rgb(233, 63, 97);
+    color:rgb(255, 255, 255);
+    text-align: center;
+    padding: 25px 0;
+    margin-bottom: 25px;
+    
+}
+
+#Leader_board{
+    text-align: center;
+    color: rgb(0, 0, 0);
+    
+    
+}
+
+#Empire_Leader_Board{
+    text-align: center;
+    color: rgb(0, 0, 0);
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+    color: black;
+    font-weight: bold;
+    height: auto;
+    padding: 10px;
+    padding-left: 50px;
+}
+  
+th, td {
+    padding: 0.5rem;
+    text-align: center;
+}
+  
+th {
+    background-color: darkgray;
+    font-weight: bold;
+}
+  
+tr:nth-of-type(even) {
+    background-color: #f9f9f9;
+}
+
+.tables-wrapper {
+    display: flex;
+    justify-content: space-between;
+  }
+
+
+
+.table-container {
+    width: 60%; /* 50% - a little bit for potential padding/margin */
+    max-width: 900px; /* Adjust as needed */
+    margin: auto; /* Center the table */
+    overflow-x: auto; /* Enable horizontal scrolling if the table is too wide */
+}

@@ -223,7 +223,7 @@ async function main() {
   // Append the row to the table
   table.appendChild(row);
 
-  document.getElementById("table-search").addEventListener("keyup", display_query);
+  document.getElementById("table-search").addEventListener("input", display_query);
   document.getElementById("table-search-clear").addEventListener("mousedown", clear_query);
 });
   
@@ -301,6 +301,8 @@ async function main() {
     }
   
     return 0; // Default BR if no threshold matches
+
+    
   }
   
 

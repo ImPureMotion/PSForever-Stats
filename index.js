@@ -19,20 +19,19 @@ const players = [];
 const len = 50;
 
 async function display_query(event) {
-  for (var i = 0; i < len; i++) {
-    try {
-      var match = document.getElementById("table-search").value;
-      if (match == "") {
-        document.getElementById(`${players[i].name}`).style.display = "table-row";
-        continue;
-      }
-      document.getElementById(`${players[i].name}`).style.display = "none";
-      document.getElementById(`${match}`).style.display = "table-row";
-    } catch {
-      continue;
+  const match = document.getElementById("table-search").value.trim().toLowerCase();
+  const tableRows = document.querySelectorAll("#myTable tbody tr");
+
+  tableRows.forEach(row => {
+    const playerName = row.id.toLowerCase();
+    if (match === "" || playerName.includes(match)) {
+      row.style.display = "table-row";
+    } else {
+      row.style.display = "none";
     }
-  }
+  });
 }
+
 async function clear_query(event) {
   for (var i = 0; i < len; i++) {
     try {
@@ -54,20 +53,22 @@ async function getPlayerData() {
     }
 
     const data = await response.json();
-    return data.players;
+    const topPlayers = data.players.slice(0, 50); // Limit to top 50 players
+    return topPlayers;
   } catch (error) {
     console.log("An error occurred while fetching the data:", error);
     return null;
   }
 }
 
-async function main() {
-  const playersData = await getPlayerData();
-  console.log(playersData);
 
-  // Now playersData is an array of player objects
+async function main() {
+  const topPlayers = await getPlayerData();
+  console.log(topPlayers);
+
+  // Now topPlayers is an array of the top 50 player objects
   // Store it in the players array
-  players.push(...playersData);
+  players.push(...topPlayers);
 
 
   // Calculate and assign kills property to each player

@@ -16,7 +16,7 @@ getPlayerData()
 const proxyurl = "https://corsproxy.io/?";
 const targetUrl = 'https://play.psforever.net/api/char_stats_cep/0';
 const players = [];
-const len = 50;
+const len = 1000;
 
 async function display_query(event) {
   const match = document.getElementById("table-search").value.trim().toLowerCase();
@@ -53,7 +53,7 @@ async function getPlayerData() {
     }
 
     const data = await response.json();
-    const topPlayers = data.players.slice(0, 50); // Limit to top 50 players
+    const topPlayers = data.players.slice(0, 1000); // Limit number of players
     return topPlayers;
   } catch (error) {
     console.log("An error occurred while fetching the data:", error);
@@ -81,7 +81,7 @@ async function main() {
   // Sort players array by kills in descending order
   players.sort((a, b) => b.kills - a.kills);
   
-  players.slice(0, 50).forEach((player, index) => {
+  players.slice(0, 1000).forEach((player, index) => {
     const rank = index + 1;
   
     const row = document.createElement('tr');

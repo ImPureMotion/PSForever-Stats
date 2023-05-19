@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+
+<!--v0.1 MVP for retrieving PSForever Stats-->
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSForever Stats</title>
+  <link rel="icon" href="Images/favicon.ico" type="image/x-icon">
+  <link href="style.css" rel="stylesheet" />
+</head>
+<body>
+  <header>
+    <h1>PSForever Stats</h1>
+    <section>
+      <nav>
+        <div>
+          <a href="#" onclick="id"></a>
+        </div>
+        <div>
+          <a href="#"></a>
+        </div>
+      </nav>
+    </section>
+  </header>
+  <main id="main">
+    <div>
+      <h1 id="Leader_board">Character Leader Board (Top 50)</h1>
+    </div>
+    <table style="width: 25%; padding: 0px; margin: 0px; left: 0px; right: 0px; margin-left: auto; margin-right: auto;">
+      <thead>
+        <tr>
+          <td>
+            <input id="table-search" type="text" style="width: 200px;" placeholder="Search by Username"/>
+          </td>
+          <td>
+            <input id="table-search-clear" type="button" value="Clear Search"/>
+          </td>
+        </tr>
+        <tr style="background-color: #ececec;"><td></td></tr>
+      </thead>
+    </table>
+    <div class="tables-wrapper">
+      <div class="table-container">
+      <table id="myTable">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Faction</th>
+            <th>Username</th>
+            <th>Kills</th>
+            <th>Battle Rank</th>
+            <th>Command Rank</th>
+            <th>BEP</th>
+            <th>CEP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be dynamically added here -->
+        </tbody>
+      </table>
+    </div>
+    </div>
+    <div>
+      <h1 id="Empire_Leader_Board">Empire Leader Board</h1>
+    </div>
+    <div>
+      <table id="empireTable">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Faction</th>
+            <th>Kill Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be dynamically added here -->
+        </tbody>
+      </table>
+    </div>
+    <div id="pagination">
+      <!-- Page buttons will be dynamically added here -->
+    </div>
+  </main>
+  <footer>
+
+  </footer>
+  
+  <script src="index.js"></script>
+</body>
+</html>

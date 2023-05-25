@@ -1,69 +1,96 @@
+/* CSS Reset or Normalize */
+/* Add your CSS reset or normalize styles here */
 
-
-body{
-    background-color: #ececec;
-    
-    margin: 0; /*use this to have the full screen used without default borders*/
-}
-
-
-
-header{
-    background-color: rgb(233, 63, 97);
-    color:rgb(255, 255, 255);
+/* CSS Variables */
+:root {
+    --primary-color: rgb(233, 63, 97);
+    --text-color: rgb(255, 255, 255);
+    --body-bg-color: #ececec;
+  }
+  
+  body {
+    background-color: var(--body-bg-color);
+    margin: 0;
+  }
+  
+  header {
+    background-color: var(--primary-color);
+    color: var(--text-color);
     text-align: center;
     padding: 25px 0;
     margin-bottom: 25px;
-    
-}
-
-#Leader_board{
+  }
+  
+  #Leader_board,
+  #Empire_Leader_Board {
     text-align: center;
-    color: rgb(0, 0, 0);
-    
-    
-}
-
-#Empire_Leader_Board{
-    text-align: center;
-    color: rgb(0, 0, 0);
-}
-
-table {
+    color: #000;
+  }
+  
+  table {
     border-collapse: collapse;
     width: 100%;
     margin-bottom: 1rem;
-    color: black;
+    color: #000;
     font-weight: bold;
     height: auto;
     padding: 10px;
-    padding-left: 50px;
-}
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+  }
   
-th, td {
+  h1 {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+  }
+  
+  th,
+  td {
     padding: 0.5rem;
     text-align: center;
-}
+  }
   
-th {
+  th {
     background-color: darkgray;
     font-weight: bold;
-}
+  }
   
-tr:nth-of-type(even) {
+  tr:nth-of-type(even) {
     background-color: #f9f9f9;
-}
-
-.tables-wrapper {
+  }
+  
+  .tables-wrapper {
     display: flex;
     justify-content: space-between;
+    overflow-x: auto;
   }
-
-
-
-.table-container {
-    width: 60%; /* 50% - a little bit for potential padding/margin */
-    max-width: 900px; /* Adjust as needed */
-    margin: auto; /* Center the table */
-    overflow-x: auto; /* Enable horizontal scrolling if the table is too wide */
-}
+  
+  .table-container {
+    width: 100%;
+    max-width: 900px;
+    margin: auto;
+    overflow-x: auto;
+    padding: 0 10px; /* Adjust as needed */
+  }
+  
+  /* Media Queries */
+  @media screen and (max-width: 768px) {
+    table {
+      font-size: 14px;
+    }
+    
+    th,
+    td {
+      padding: 0.3rem;
+    }
+  }
+  
+  @media screen and (max-width: 576px) {
+    table {
+      font-size: 12px;
+    }
+    
+    th,
+    td {
+      padding: 0.2rem;
+    }
+  }
+  

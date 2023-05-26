@@ -6,6 +6,7 @@
     $username = "default";
     $password = "";
     $table_weekly = "table_weekly_stats";
+    $table_current = "table_current_stats";
     $db = "test_stats";
     $url = 'https://play.psforever.net/api/char_stats_cep/0';
     $char_limit = 5000;
@@ -13,8 +14,37 @@
     $array = [
         "CREATE USER `$username` INDENTIFIED VIA mysql_native_password USING `$password`;",
         "GRANT SELECT , INSERT, UPDATE, CREATE, EVENT ON *.* TO '$username';",
-        "CREATE TABLE IF NOT EXISTS $table_weekly (character_name VARCHAR(60), faction SMALLINT(3), _rank INT(10), stat BIGINT(255), bep BIGINT(255), cep BIGINT(255), br SMALLINT(2), cr SMALLINT(2));"
+        "CREATE TABLE IF NOT EXISTS $table_weekly  (character_name VARCHAR(60), faction SMALLINT(3), _rank INT(10), stat BIGINT(255), bep BIGINT(255), cep BIGINT(255), br SMALLINT(2), cr SMALLINT(2));",
+        "CREATE TABLE IF NOT EXISTS $table_current (character_name VARCHAR(60), faction SMALLINT(3), _rank INT(10), stat BIGINT(255), bep BIGINT(255), cep BIGINT(255), br SMALLINT(2), cr SMALLINT(2));"
     ];
+    function create_event($minute)
+    {
+        return "CREATE EVENT IF NOT EXISTS `weekly_stats_0$minute` ON SCHEDULE EVERY 1 WEEK STARTS '2023-05-28 20:0$minute:00.000000' ON COMPLETION NOT PRESERVE ENABLE DO ";
+    }
+
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    $link = mysqli_connect($ip, $username, $password, $db);
+    mysqli_query($link, $array[2]);
+    mysqli_query($link, $array[3]);
+
+    $setup_event = [
+        create_event(0) . "DROP TABLE `$table_weekly`;",
+        create_event(1) . "CREATE TABLE IF NOT EXISTS `$table_current`.`$table_weekly` (".
+            "`character_name` varchar(60) DEFAULT NULL, ".
+            "`faction` smallint(3) DEFAULT NULL, ".
+            "`_rank` int(10) DEFAULT NULL, ".
+            "`stat` bigint(255) DEFAULT NULL, ".
+            "`bep` bigint(255) DEFAULT NULL, ".
+            "`cep` bigint(255) DEFAULT NULL, ".
+            "`br` smallint(2) DEFAULT NULL, ".
+            "`cr` smallint(2) DEFAULT NULL".
+          ") ENGINE=InnoDB DEFAULT CHARSET=latin1;",
+        create_event(2) . "INSERT INTO `$table_current`.`$table_weekly`(`character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr`) SELECT `character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr` FROM `$table_current`.`$table_weekly`;",
+    ];
+    for ($i = 0; $i < sizeof($setup_event); $i++)
+    {
+        mysqli_query($link, $setup_event[$i]);
+    }
 
     function get_total($cep) 
     {
@@ -96,11 +126,6 @@
         return 0;
     }
     
-
-    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    $link = mysqli_connect($ip, $username, $password, $db);
-    mysqli_query($link, $array[2]);
-
     $get = file_get_contents($url, false, null, 0, $char_limit);
     $len = strlen($get);
     for ($i = 0; $i < 1000; $i++) 
@@ -128,15 +153,15 @@
         $br      = calculateBR($bep);
         $cr      = calculateCR($cep);
         $total   = (int)get_total($cep);
-        $check   = mysqli_query($link, "SELECT `character_name` FROM $table_weekly WHERE `character_name` = '$name'");
+        $check   = mysqli_query($link, "SELECT `character_name` FROM $table_current WHERE `character_name` = '$name'");
         if ($check->num_rows == 0) 
         {
-            mysqli_query($link, "INSERT INTO $table_weekly VALUES ('$name', $faction, 0, $total, $bep, $cep, $br, $cr);");
+            mysqli_query($link, "INSERT INTO $table_current VALUES ('$name', $faction, 0, $total, $bep, $cep, $br, $cr);");
         } 
         else 
         {
             //  Skipping creating two tables and make this update happen once a week.
-            mysqli_query($link, "UPDATE $table_weekly SET `stat`= $total,`bep`= $bep,`cep`= $cep,`br`=$br,`cr`= $cr WHERE `character_name` = '$name'");
+            mysqli_query($link, "UPDATE $table_current SET `stat`= $total,`bep`= $bep,`cep`= $cep,`br`=$br,`cr`= $cr WHERE `character_name` = '$name'");
         }
     }
     //  Get unique stat per index from JSON
@@ -145,21 +170,23 @@
         $len = 50;
         $array = [$len];
         $table_weekly = "table_weekly_stats";
+        $table_current = "table_current_stats";
         //  Declare values
         for ($i = 0; $i < $len; $i++) 
         {
             $name    = $json['players'][$i]['name'];
-            $faction = (int)$json['players'][$i]['faction_id'];
-            $bep     = (int)$json['players'][$i]['bep'];
-            $cep     = (int)$json['players'][$i]['cep'];
+            $current = mysqli_query($link, "SELECT * FROM $table_current WHERE character_name = '$name';")->fetch_row();
+            //$name    = $current[0];
+            $faction = $current[1];
+            $bep     = $current[4];
+            $cep     = $current[5];
             $br      = calculateBR($bep);
             $cr      = calculateCR($cep);
             $total   = (int)$cep / 100;
             //  Get previous stats state
-            $old_total = mysqli_query($link, "SELECT * FROM $table_weekly WHERE `character_name` = '$name'")->fetch_row();
+            $old_total = mysqli_query($link, "SELECT * FROM $table_weekly WHERE character_name = '$name';")->fetch_row();
             $array[$i] = array(
                 'rank'    => (int)$old_total[2],
-                'oldrank' => 0,
                 'change'  => 0,
                 'faction' => $faction,
                 'name'    => $name,
@@ -173,7 +200,6 @@
         //  Sorting indices from $array to $sort and returning $sort
         $sort = array_fill(0, $len, array(
             'rank'    => 0,
-            'oldrank' => 0,
             'change'  => 0,
             'faction' => 0,
             'name'    => '',
@@ -200,7 +226,7 @@
             }
             if ($maxvalue == 0)
             {
-                return array("");
+                continue;
             }
             $_name = $array[$num2]['name'];
             $array[$num2]['total'] = -1;
@@ -208,11 +234,10 @@
             $sort[$index] = $array[$num2];
             $sort[$index]['total'] = $maxvalue;
             $sort[$index]['rank'] = (int)$index;
-            $sort[$index]['oldrank'] = (int)$old_total[2];
-            $sort[$index]['change'] = (int)$old_total[2] - (int)$index;
+            $sort[$index]['change'] = (int)$index - (int)$old_total[2];
             $maxvalue = 0;
             $num = -1;
-            mysqli_query($link, "UPDATE $table_weekly SET `_rank`= $index WHERE `character_name` = '$_name';");
+            mysqli_query($link, "UPDATE $table_current SET `_rank`= $index WHERE `character_name` = '$_name';");
             $num2 = -1;
         }
         return $sort;

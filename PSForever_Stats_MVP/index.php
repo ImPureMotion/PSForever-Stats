@@ -26,7 +26,7 @@
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     //  Connect and initialize user and database
     $link = mysqli_connect($ip, "root", "", "mysql");
-    mysqli_query($link, $array[5]);    
+    mysqli_query($link, $array[5]);
     mysqli_query($link, $array[1]);
     mysqli_query($link, $array[4]);
     //  Connect to user and database
@@ -46,7 +46,7 @@
             "`br` smallint(2) DEFAULT NULL, ".
             "`cr` smallint(2) DEFAULT NULL".
           ") ENGINE=InnoDB DEFAULT CHARSET=latin1;",
-        create_event(2) . "INSERT INTO `$table_current`.`$table_weekly`(`character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr`) SELECT `character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr` FROM `$table_current`.`$table_weekly`;",
+        create_event(2) . "INSERT INTO `$table_current`.`$table_weekly`(`character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr`) SELECT `character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr` FROM `$table_current`.`$table_weekly`;"
     ];
     for ($i = 0; $i < sizeof($setup_event); $i++)
     {
@@ -303,30 +303,32 @@
     }
     require_once("index.html");
 ?>
-<div class='tables-wrapper'>
-    <div class='table-container'>
-        <table <?php printf("style='display:".$display.";'"); ?> id='myTable'>
-            <thead>
-                <tr>
-                    <th>Difference</th>
-                    <th>Rank</th>
-                    <th>Faction</th>
-                    <th>Username</th>
-                    <th>Kills</th>
-                    <th>Battle Rank</th>
-                    <th>Command Rank</th>
-                    <th>BEP</th>
-                    <th>CEP</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                    if ($output != "")
-                    {
-                        echo ($output);
-                    }
-                ?>
-            </tbody>
-        </table>
+<div id="_t2" style="display: none;">
+    <div class='tables-wrapper'>
+        <div class='table-container'>
+            <table <?php printf("style='display:".$display.";'"); ?> id='myTable'>
+                <thead>
+                    <tr>
+                        <th>Difference</th>
+                        <th>Rank</th>
+                        <th>Faction</th>
+                        <th>Username</th>
+                        <th>Kills</th>
+                        <th>Battle Rank</th>
+                        <th>Command Rank</th>
+                        <th>BEP</th>
+                        <th>CEP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                        if ($output != "")
+                        {
+                            echo ($output);
+                        }
+                    ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>

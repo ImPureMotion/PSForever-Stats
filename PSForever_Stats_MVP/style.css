@@ -94,3 +94,23 @@
     }
   }
   
+/***************/
+/*    Added    */
+/***************/
+
+.tab {
+  margin: 0px 3px 0px 3px;
+  text-align: center;
+  width: 100px;
+  background-color: darkgray;
+}
+.tab_header {
+  width: 35%; 
+  margin-left: auto; 
+  margin-right: auto;
+}
+
+a:link 		{	text-decoration: none;	color: #1969A1;	background: transparent; }
+a:visited	{	text-decoration: none;	color: #000; 	background: transparent; }
+a:hover		{	text-decoration: none;	color: #0055DD; background: transparent; }
+a:active	{	text-decoration: none;	color: #0055DD;	background: transparent; }

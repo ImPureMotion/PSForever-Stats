@@ -234,7 +234,7 @@
             $sort[$index] = $array[$num2];
             $sort[$index]['total'] = $maxvalue;
             $sort[$index]['rank'] = (int)$index;
-            $sort[$index]['change'] = (int)$index - (int)$old_total[2];
+            $sort[$index]['change'] = (int)$old_total[2] - (int)$index;
             $maxvalue = 0;
             $num = -1;
             mysqli_query($link, "UPDATE $table_current SET `_rank`= $index WHERE `character_name` = '$_name';");

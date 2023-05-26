@@ -1,21 +1,22 @@
 <?php
-    //  Idea would be to change IP to remote server with database updating once a week, OR 
-    //  keep localhost and have a script dumping stats into a local database (once a week)
-    //  for a comparison.
-    $ip = "localhost";
-    $username = "default";
-    $password = "";
+    //  A local protected file to get username, password, and other data from
+    $file_get = json_decode(file_get_contents("./local_user_data/user_data"), true);
+    $ip = $file_get['ipaddress'];
+    $username = $file_get['username'];
+    $password = $file_get['password'];
+    $db = $file_get['database'];
     $table_weekly = "table_weekly_stats";
     $table_current = "table_current_stats";
-    $db = "test_stats";
     $url = 'https://play.psforever.net/api/char_stats_cep/0';
     $char_limit = 5000;
 
     $array = [
-        "CREATE USER `$username` INDENTIFIED VIA mysql_native_password USING `$password`;",
+        "CREATE USER IF NOT EXISTS '$username' INDENTIFIED VIA mysql_native_password USING '$password';",
         "GRANT SELECT , INSERT, UPDATE, CREATE, EVENT ON *.* TO '$username';",
         "CREATE TABLE IF NOT EXISTS $table_weekly  (character_name VARCHAR(60), faction SMALLINT(3), _rank INT(10), stat BIGINT(255), bep BIGINT(255), cep BIGINT(255), br SMALLINT(2), cr SMALLINT(2));",
-        "CREATE TABLE IF NOT EXISTS $table_current (character_name VARCHAR(60), faction SMALLINT(3), _rank INT(10), stat BIGINT(255), bep BIGINT(255), cep BIGINT(255), br SMALLINT(2), cr SMALLINT(2));"
+        "CREATE TABLE IF NOT EXISTS $table_current (character_name VARCHAR(60), faction SMALLINT(3), _rank INT(10), stat BIGINT(255), bep BIGINT(255), cep BIGINT(255), br SMALLINT(2), cr SMALLINT(2));",
+        "CREATE DATABASE IF NOT EXISTS `$db`;",
+        "CREATE USER IF NOT EXISTS '$username'"
     ];
     function create_event($minute)
     {
@@ -23,7 +24,13 @@
     }
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    $link = mysqli_connect($ip, $username, $password, $db);
+    //  Connect and initialize user and database
+    $link = mysqli_connect($ip, "root", "", "mysql");
+    mysqli_query($link, $array[1]);
+    mysqli_query($link, $array[4]);
+    mysqli_query($link, $array[5]);
+    //  Connect to user and database
+    $link = mysqli_connect($ip, $username, "", $db);
     mysqli_query($link, $array[2]);
     mysqli_query($link, $array[3]);
 

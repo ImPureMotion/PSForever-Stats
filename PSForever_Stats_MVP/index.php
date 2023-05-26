@@ -26,9 +26,9 @@
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     //  Connect and initialize user and database
     $link = mysqli_connect($ip, "root", "", "mysql");
+    mysqli_query($link, $array[5]);    
     mysqli_query($link, $array[1]);
     mysqli_query($link, $array[4]);
-    mysqli_query($link, $array[5]);
     //  Connect to user and database
     $link = mysqli_connect($ip, $username, "", $db);
     mysqli_query($link, $array[2]);

@@ -163,7 +163,7 @@
                 'change'  => 0,
                 'faction' => $faction,
                 'name'    => $name,
-                'total'   => $total - ((int)$old_total[3] - 100),
+                'total'   => $total - (int)$old_total[3],
                 'br'      => $br,
                 'cr'      => $cr,
                 'bep'     => $bep - (int)$old_total[4],
@@ -217,7 +217,58 @@
         }
         return $sort;
     }
+    function output_string($array, $len)
+    {
+        function get_image_tag($faction) 
+        {
+            switch ($faction)
+            {
+                case 0:
+                    return 'Images/Empires-tr-icon.webp';
+                case 1:
+                    return 'Images/Empires-nc-icon.webp';
+                case 2:
+                    return 'Images/Empires-vs-icon.webp';
+                default:
+                    return -1;
+            }
+        }
+        if ($array == -1 || $array[0] == "")
+        {
+            return "";
+        }
+        $output = "";
+        for ($i = 0; $i < $len; $i++)
+        {
+            if ($array[$i]['total'] == 0)
+            {
+                continue;
+            }
+            $id = $array[$i]['name'];
+            $output .=
+                "<tr id='$id'>".
+                "<td>".$array[$i]['change']."</td>".
+                "<td>".($array[$i]['rank'] + 1)."</td>".
+                "<td><img src='".get_image_tag($array[$i]['faction'])."' style='width:33%;' /></td>".
+                "<td>".$array[$i]['name']."</td>".
+                "<td>".$array[$i]['total']."</td>".
+                "<td>".$array[$i]['br']."</td>".
+                "<td>".$array[$i]['cr']."</td>".
+                "<td>".$array[$i]['bep']."</td>".
+                "<td>".$array[$i]['cep']."</td>".
+                "</tr>".
+                "";
+        }
+        return $output;
+    }
+    $output = "";
     $display = "none";
+    $_array = get_unique_stat($link, $json);
+    if ($_array[0] != "")
+    {
+        $display = "table-row";
+        $output = output_string($_array, $len);
+    }
     require_once("index.html");
 ?>
 <div class='tables-wrapper'>
@@ -238,45 +289,9 @@
             </thead>
             <tbody>
                 <?php
-                    function output_string($array, $len) 
+                    if ($output != "")
                     {
-                        if ($array[0] == "")
-                        {
-                            return $array;
-                        }
-                        $output = "";
-                        for ($i = 0; $i < $len; $i++)
-                        {
-                            if ($array[$i]['total'] == 0) 
-                            {
-                                continue;
-                            }
-                            $id = $array[$i]['name'];
-                            $output .=
-                                "<tr id='$id'>".
-                                "<td>".$array[$i]['change']."</td>".
-                                "<td>".($array[$i]['rank'] + 1)."</td>".
-                                "<td>".$array[$i]['faction']."</td>".
-                                "<td>".$array[$i]['name']."</td>".
-                                "<td>".$array[$i]['total']."</td>".
-                                "<td>".$array[$i]['br']."</td>".
-                                "<td>".$array[$i]['cr']."</td>".
-                                "<td>".$array[$i]['bep']."</td>".
-                                "<td>".$array[$i]['cep']."</td>".
-                                "</tr>".
-                                "";
-                        }
-                        return $output;
-                    }
-                    $_array = get_unique_stat($link, $json);
-                    var_dump($_array);
-                    if ($_array[0] != "")
-                    {
-                        $display = "table-row";
-                        printf(
-                            output_string(
-                                $_array, $len)
-                        );
+                        echo ($output);
                     }
                 ?>
             </tbody>

@@ -4,53 +4,49 @@
     $ip = $file_get['ipaddress'];
     $username = $file_get['username'];
     $password = $file_get['password'];
-    $db = $file_get['database'];
+    $db_current = $file_get['database'] . "_current";
+    $db_weekly = $file_get['database'] . "_weekly";
     $table_weekly = "table_weekly_stats";
     $table_current = "table_current_stats";
     $url = 'https://play.psforever.net/api/char_stats_cep/0';
     $char_limit = 5000;
-
-    $array = [
-        "CREATE USER IF NOT EXISTS '$username' INDENTIFIED VIA mysql_native_password USING '$password';",
-        "GRANT SELECT , INSERT, UPDATE, CREATE, EVENT ON *.* TO '$username';",
-        "CREATE TABLE IF NOT EXISTS $table_weekly  (character_name VARCHAR(60), faction SMALLINT(3), _rank INT(10), stat BIGINT(255), bep BIGINT(255), cep BIGINT(255), br SMALLINT(2), cr SMALLINT(2));",
-        "CREATE TABLE IF NOT EXISTS $table_current (character_name VARCHAR(60), faction SMALLINT(3), _rank INT(10), stat BIGINT(255), bep BIGINT(255), cep BIGINT(255), br SMALLINT(2), cr SMALLINT(2));",
-        "CREATE DATABASE IF NOT EXISTS `$db`;",
-        "CREATE USER IF NOT EXISTS '$username'"
-    ];
-    function create_event($minute)
-    {
-        return "CREATE EVENT IF NOT EXISTS `weekly_stats_0$minute` ON SCHEDULE EVERY 1 WEEK STARTS '2023-05-28 20:0$minute:00.000000' ON COMPLETION NOT PRESERVE ENABLE DO ";
-    }
+    //  Set to true when running this on localhost on the desired reset date
+    $flag_manual_weekly_reset = false;
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    //  Connect and initialize user and database
     $link = mysqli_connect($ip, "root", "", "mysql");
-    mysqli_query($link, $array[5]);
-    mysqli_query($link, $array[1]);
-    mysqli_query($link, $array[4]);
-    //  Connect to user and database
-    $link = mysqli_connect($ip, $username, "", $db);
-    mysqli_query($link, $array[2]);
-    mysqli_query($link, $array[3]);
-
-    $setup_event = [
-        create_event(0) . "DROP TABLE `$table_weekly`;",
-        create_event(1) . "CREATE TABLE IF NOT EXISTS `$table_current`.`$table_weekly` (".
-            "`character_name` varchar(60) DEFAULT NULL, ".
-            "`faction` smallint(3) DEFAULT NULL, ".
-            "`_rank` int(10) DEFAULT NULL, ".
-            "`stat` bigint(255) DEFAULT NULL, ".
-            "`bep` bigint(255) DEFAULT NULL, ".
-            "`cep` bigint(255) DEFAULT NULL, ".
-            "`br` smallint(2) DEFAULT NULL, ".
-            "`cr` smallint(2) DEFAULT NULL".
-          ") ENGINE=InnoDB DEFAULT CHARSET=latin1;",
-        create_event(2) . "INSERT INTO `$table_current`.`$table_weekly`(`character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr`) SELECT `character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr` FROM `$table_current`.`$table_weekly`;"
-    ];
-    for ($i = 0; $i < sizeof($setup_event); $i++)
+    function create_event($minute)
     {
-        mysqli_query($link, $setup_event[$i]);
+        return "CREATE EVENT IF NOT EXISTS `weekly_stats_0$minute` ON SCHEDULE EVERY 1 WEEK STARTS '2023-05-29 19:1$minute:00.000000' ENABLE DO ";
+    }
+    function create_table($db_name, $table_name)
+    {
+        return "CREATE TABLE IF NOT EXISTS `$db_name`.`$table_name` (
+            `character_name` varchar(60) DEFAULT NULL,
+            `faction` smallint(3) DEFAULT NULL,
+            `_rank` int(10) DEFAULT NULL,
+            `stat` bigint(255) DEFAULT NULL,
+            `bep` bigint(255) DEFAULT NULL,
+            `cep` bigint(255) DEFAULT NULL,
+            `br` smallint(2) DEFAULT NULL,
+            `cr` smallint(2) DEFAULT NULL
+          ) ENGINE=InnoDB DEFAULT CHARSET=latin1;";
+    }
+    mysqli_query($link, "CREATE DATABASE IF NOT EXISTS `$db_current`;");
+    mysqli_query($link, create_table($db_current, $table_current));
+    $rows = mysqli_query($link, "SELECT `character_name` FROM `$db_current`.`$table_current`;")->num_rows;
+    if ($rows == 0)
+    {
+        //  INIT
+        mysqli_query($link, "CREATE DATABASE IF NOT EXISTS `$db_weekly`;");
+        mysqli_query($link, create_table($db_weekly, $table_weekly));
+        mysqli_query($link, "INSERT INTO `$db_weekly`.`$table_weekly`(`character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr`) SELECT `character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr` FROM `$db_current`.`$table_current`;");
+
+        //  SETUP AUTOMATION EVENT
+        mysqli_query($link, "USE `$db_weekly`");
+        mysqli_query($link, create_event(0) . "DROP TABLE IF EXISTS `$db_weekly`.`$table_weekly`;");
+        mysqli_query($link, create_event(1) . create_table($db_weekly, $table_weekly));
+        mysqli_query($link, create_event(2) . "INSERT INTO `$db_weekly`.`$table_weekly`(`character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr`) SELECT `character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr` FROM `$db_current`.`$table_current`;");
     }
 
     function get_total($cep) 
@@ -160,15 +156,20 @@
         $br      = calculateBR($bep);
         $cr      = calculateCR($cep);
         $total   = (int)get_total($cep);
-        $check   = mysqli_query($link, "SELECT `character_name` FROM $table_current WHERE `character_name` = '$name'");
-        if ($check->num_rows == 0) 
+        $check   = mysqli_query($link, "SELECT `character_name` FROM `$db_current`.`$table_current` WHERE `character_name` = '$name'")->num_rows;
+        if ($check < $len) 
         {
-            mysqli_query($link, "INSERT INTO $table_current VALUES ('$name', $faction, 0, $total, $bep, $cep, $br, $cr);");
+            mysqli_query($link, "INSERT INTO `$db_current`.`$table_current` VALUES ('$name', $faction, 0, $total, $bep, $cep, $br, $cr);");
+            $rows_weekly = mysqli_query($link, "SELECT `character_name` FROM `$db_current`.`$table_current` WHERE `character_name` = '$name'")->num_rows;
+            if ($rows_weekly < $len)
+            {
+                mysqli_query($link, "INSERT INTO `$db_weekly`.`$table_weekly` VALUES ('$name', $faction, 0, $total, $bep, $cep, $br, $cr);");
+            }
         } 
         else 
         {
             //  Skipping creating two tables and make this update happen once a week.
-            mysqli_query($link, "UPDATE $table_current SET `stat`= $total,`bep`= $bep,`cep`= $cep,`br`=$br,`cr`= $cr WHERE `character_name` = '$name'");
+            mysqli_query($link, "UPDATE `$db_current`.`$table_current` SET `stat`= $total,`bep`= $bep,`cep`= $cep,`br`=$br,`cr`= $cr WHERE `character_name` = '$name'");
         }
     }
     //  Get unique stat per index from JSON
@@ -176,13 +177,15 @@
     {
         $len = 50;
         $array = [$len];
+        $db_current = "db_current";
+        $db_weekly = "db_weekly";
         $table_weekly = "table_weekly_stats";
         $table_current = "table_current_stats";
         //  Declare values
         for ($i = 0; $i < $len; $i++) 
         {
             $name    = $json['players'][$i]['name'];
-            $current = mysqli_query($link, "SELECT * FROM $table_current WHERE character_name = '$name';")->fetch_row();
+            $current = mysqli_query($link, "SELECT * FROM `$db_current`.`$table_current` WHERE character_name = '$name';")->fetch_row();
             //$name    = $current[0];
             $faction = $current[1];
             $bep     = $current[4];
@@ -191,7 +194,7 @@
             $cr      = calculateCR($cep);
             $total   = (int)$cep / 100;
             //  Get previous stats state
-            $old_total = mysqli_query($link, "SELECT * FROM $table_weekly WHERE character_name = '$name';")->fetch_row();
+            $old_total = mysqli_query($link, "SELECT * FROM `$db_weekly`.`$table_weekly` WHERE character_name = '$name';")->fetch_row();
             $array[$i] = array(
                 'rank'    => (int)$old_total[2],
                 'change'  => 0,
@@ -237,14 +240,14 @@
             }
             $_name = $array[$num2]['name'];
             $array[$num2]['total'] = -1;
-            $old_total = mysqli_query($link, "SELECT * FROM $table_weekly WHERE `character_name` = '$_name';")->fetch_row();
+            $old_total = mysqli_query($link, "SELECT * FROM `$db_weekly`.`$table_weekly` WHERE `character_name` = '$_name';")->fetch_row();
             $sort[$index] = $array[$num2];
             $sort[$index]['total'] = $maxvalue;
             $sort[$index]['rank'] = (int)$index;
             $sort[$index]['change'] = (int)$old_total[2] - (int)$index;
             $maxvalue = 0;
             $num = -1;
-            mysqli_query($link, "UPDATE $table_current SET `_rank`= $index WHERE `character_name` = '$_name';");
+            mysqli_query($link, "UPDATE `$db_current`.`$table_current` SET `_rank`= $index WHERE `character_name` = '$_name';");
             $num2 = -1;
         }
         return $sort;

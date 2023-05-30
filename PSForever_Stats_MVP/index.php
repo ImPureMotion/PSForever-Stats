@@ -17,7 +17,7 @@
     $link = mysqli_connect($ip, "root", "", "mysql");
     function create_event($minute)
     {
-        return "CREATE EVENT IF NOT EXISTS `weekly_stats_0$minute` ON SCHEDULE EVERY 1 WEEK STARTS '2023-05-29 19:1$minute:00.000000' ENABLE DO ";
+        return "CREATE EVENT IF NOT EXISTS `weekly_stats_0$minute` ON SCHEDULE EVERY 1 WEEK STARTS '2023-05-28 20:0$minute:00.000000' ENABLE DO ";
     }
     function create_table($db_name, $table_name)
     {
@@ -32,6 +32,10 @@
             `cr` smallint(2) DEFAULT NULL
           ) ENGINE=InnoDB DEFAULT CHARSET=latin1;";
     }
+    //  TURN EVENT SCHEDULER ON
+    mysqli_query($link, "SET GLOBAL event_scheduler = ON;");
+        
+    //  Only runs once if already run once before due to IF NOT EXISTS
     mysqli_query($link, "CREATE DATABASE IF NOT EXISTS `$db_current`;");
     mysqli_query($link, create_table($db_current, $table_current));
     $rows = mysqli_query($link, "SELECT `character_name` FROM `$db_current`.`$table_current`;")->num_rows;

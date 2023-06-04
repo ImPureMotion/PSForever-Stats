@@ -16,8 +16,9 @@
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $link = mysqli_connect($ip, "root", "", "mysql");
     function create_event($minute)
-    {
-        return "CREATE EVENT IF NOT EXISTS `weekly_stats_0$minute` ON SCHEDULE EVERY 1 WEEK STARTS '2023-05-28 20:0$minute:00.000000' ENABLE DO ";
+    {                                                                                                
+        // Starts on the beginning of a Monday to give time for those interested in viewing stats during the weekend
+        return "CREATE EVENT IF NOT EXISTS `weekly_stats_0$minute` ON SCHEDULE EVERY 1 WEEK STARTS '2023-05-29 00:0$minute:00.000000' ENABLE DO ";
     }
     function create_table($db_name, $table_name)
     {
@@ -51,6 +52,13 @@
         mysqli_query($link, create_event(0) . "DROP TABLE IF EXISTS `$db_weekly`.`$table_weekly`;");
         mysqli_query($link, create_event(1) . create_table($db_weekly, $table_weekly));
         mysqli_query($link, create_event(2) . "INSERT INTO `$db_weekly`.`$table_weekly`(`character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr`) SELECT `character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr` FROM `$db_current`.`$table_current`;");
+    }
+
+    if ($flag_manual_weekly_reset == true)
+    {
+        mysqli_query($link, "DROP TABLE IF EXISTS `$db_weekly`.`$table_weekly`;");
+        mysqli_query($link, create_table($db_weekly, $table_weekly));
+        mysqli_query($link, "INSERT INTO `$db_weekly`.`$table_weekly`(`character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr`) SELECT `character_name`, `faction`, `_rank`, `stat`, `bep`, `cep`, `br`, `cr` FROM `$db_current`.`$table_current`;");
     }
 
     function get_total($cep) 
@@ -161,11 +169,11 @@
         $cr      = calculateCR($cep);
         $total   = (int)get_total($cep);
         $check   = mysqli_query($link, "SELECT `character_name` FROM `$db_current`.`$table_current` WHERE `character_name` = '$name'")->num_rows;
-        if ($check < $len) 
+        if ($check == 0) 
         {
             mysqli_query($link, "INSERT INTO `$db_current`.`$table_current` VALUES ('$name', $faction, 0, $total, $bep, $cep, $br, $cr);");
-            $rows_weekly = mysqli_query($link, "SELECT `character_name` FROM `$db_current`.`$table_current` WHERE `character_name` = '$name'")->num_rows;
-            if ($rows_weekly < $len)
+            $rows_weekly = mysqli_query($link, "SELECT `character_name` FROM `$db_weekly`.`$table_weekly` WHERE `character_name` = '$name'")->num_rows;
+            if ($rows_weekly == 0)
             {
                 mysqli_query($link, "INSERT INTO `$db_weekly`.`$table_weekly` VALUES ('$name', $faction, 0, $total, $bep, $cep, $br, $cr);");
             }

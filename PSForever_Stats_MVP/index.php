@@ -141,9 +141,10 @@
         return 0;
     }
     
-    $get = file_get_contents($url, false, null, 0, $char_limit);
+                                                    //  Getting only so many indices ignores many characters
+    $get = file_get_contents($url, false, null, 0); //$char_limit);
     $len = strlen($get);
-    for ($i = 0; $i < 1000; $i++) 
+    for ($i = 0; $i < $len; $i++) 
     {
         $json = json_decode($get . ']}', true);
         if ($json != null) 
@@ -153,13 +154,16 @@
         $get = substr($get, 0, $len--);
     }
 
-    $len = sizeof($json['players']);
+    $total_len = sizeof($json['players']);
+    $len = $total_len;
+    //  Using $len here instead of $total_len ignored anyone that is not within the top [50] already
+    /*
     if ($len > 50) 
     {
         $len = 50;
-    }
+    }*/
     //  Table and stats initialize
-    for ($i = 0; $i < $len; $i++) 
+    for ($i = 0; $i < $total_len; $i++) 
     {
         $name    = $json['players'][$i]['name'];
         $faction = (int)$json['players'][$i]['faction_id'];
@@ -187,7 +191,7 @@
     //  Get unique stat per index from JSON
     function get_unique_stat($link, $json)
     {
-        $len = 50;
+        $len = sizeof($json['players']);
         $array = [$len];
         $db_current = "db_current";
         $db_weekly = "db_weekly";
@@ -314,7 +318,7 @@
     if ($_array[0] != "")
     {
         $display = "table-row";
-        $output = output_string($_array, $len);
+        $output = output_string($_array, $total_len);
     }
     require_once("index.html");
 ?>

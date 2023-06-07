@@ -4,8 +4,9 @@
     $ip = $file_get['ipaddress'];
     $username = $file_get['username'];
     $password = $file_get['password'];
-    $db_current = $file_get['database'] . "_current";
-    $db_weekly = $file_get['database'] . "_weekly";
+    $database =  $file_get['database'];
+    $db_current = "db_current";
+    $db_weekly = "db_weekly";
     $table_weekly = "table_weekly_stats";
     $table_current = "table_current_stats";
     $url = 'https://play.psforever.net/api/char_stats_cep/0';
@@ -14,7 +15,7 @@
     $flag_manual_weekly_reset = false;
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    $link = mysqli_connect($ip, "root", "", "mysql");
+    $link = mysqli_connect($ip, $username, $password, $database);
     function create_event($minute)
     {                                                                                                
         // Starts on the beginning of a Monday to give time for those interested in viewing stats during the weekend
